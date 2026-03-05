@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Play.Catalog.Service.DTOs;
+using Play.Catalog.Service.Entities;
 using Play.Catalog.Service.Repositories;
 using System;
 using System.Collections.Generic;
@@ -13,7 +14,12 @@ namespace Play.Catalog.Service.Controllers
     [Route("[controller]")]
     public class ItemsController : ControllerBase
     {
-        private readonly ItemsRepository itemsRepository = new();
+        private readonly IRepository<Item> itemsRepository;
+
+        public ItemsController(IRepository<Item> itemsRepository)
+        {
+            this.itemsRepository = itemsRepository;
+        }
 
         [HttpGet]
         public async Task<IEnumerable<ItemDTO>> GetAsync()
@@ -50,11 +56,11 @@ namespace Play.Catalog.Service.Controllers
         }
 
         [HttpDelete("{id}")]
-        public ActionResult Delete(Guid id)
+        public async Task<IActionResult> Delete(Guid id)
         {
-            var index = items.FindIndex(item => item.id == id);
-            if (index < 0) return NotFound();
-            items.RemoveAt(index);
+            var itemToDelete = await itemsRepository.GetByIdAsync(id);
+            if (itemToDelete == null) return NotFound();
+            await itemsRepository.RemoveAsync(id);
             return NoContent();
         }
     }
