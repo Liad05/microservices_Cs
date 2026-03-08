@@ -1,14 +1,9 @@
-﻿using MongoDB.Driver;
-using Play.Catalog.Service.Entities;
-using Play.Catalog.Service.Settings;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using MongoDB.Driver;
+using Play.Common.Settings;
 
-namespace Play.Catalog.Service.Repositories
+namespace Play.Common.MongoDB
 {
     public static class Extensions
     {

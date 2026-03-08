@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Play.Catalog.Service.Settings
+namespace Play.Common.Settings
 {
     public class MongoDBSettings
     {
