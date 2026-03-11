@@ -1,10 +1,11 @@
+using Microsoft.Extensions.DependencyInjection;
+using Play.Common;
 using Play.Common.MongoDB;
 using Play.Inventory.Service.Clients;
 using Play.Inventory.Service.Entities;
-using Play.Common;
-using Microsoft.Extensions.DependencyInjection;
 using Polly;
 using Polly.Timeout;
+using System;
 
 var builder = WebApplication.CreateBuilder(args);
 Random jitterer = new Random();
@@ -24,7 +25,22 @@ builder.Services.AddHttpClient<CatalogClient>(client =>
         var serviceProvider = builder.Services.BuildServiceProvider();
         serviceProvider.GetService<ILogger<CatalogClient>>()?
         .LogWarning($"Delaying for {timespan.TotalSeconds} seconds, then making retry {retryAttempt}");
-    }))
+    })).AddTransientHttpErrorPolicy(policyBuilder => policyBuilder.Or<TimeoutRejectedException>().
+    CircuitBreakerAsync(
+        3,
+        TimeSpan.FromSeconds(15),
+        onBreak: (outcome, timespan) =>
+        {
+            var serviceProvider = builder.Services.BuildServiceProvider();
+            serviceProvider.GetService<ILogger<CatalogClient>>()?
+            .LogWarning($"opening the circuit for {timespan.TotalSeconds} seconds...");
+        },
+        onReset: () =>
+        {
+            var serviceProvider = builder.Services.BuildServiceProvider();
+            serviceProvider.GetService<ILogger<CatalogClient>>()?
+            .LogWarning($"Closing the circuit...");
+        }))
 .AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(1));
 
 
